@@ -1,0 +1,77 @@
+.dashboard {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.dashboard-welcome {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 1.25rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.daily-reward-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  grid-column: span 2;
+}
+
+.daily-reward-icon {
+  font-size: 2rem;
+}
+
+.daily-reward-title {
+  font-weight: 600;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.daily-reward-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.daily-claim-btn {
+  margin-left: auto;
+  padding: 0.5rem 1.25rem;
+  background: #fbbf24;
+  color: #0f172a;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.daily-claim-btn:hover:not(:disabled):not(.claimed) { background: #f59e0b; }
+.daily-claim-btn.claimed { background: #334155; color: #64748b; cursor: default; }
+.daily-claim-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.daily-claim-btn.bonus-ready { background: #22c55e; color: #fff; animation: pulse 1.5s infinite; }
+.daily-claim-btn.bonus-ready:hover { background: #16a34a; }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50%       { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+.daily-feedback {
+  width: 100%;
+  font-size: 0.8rem;
+  margin: 0;
+}
+.daily-feedback.success { color: #4ade80; }
+.daily-feedback.error   { color: #f87171; }
