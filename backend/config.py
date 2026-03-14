@@ -10,6 +10,11 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000")
 
+    # Session cookie settings for cross-origin deployment (Vercel → Render)
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+
     # Game mechanics
     DAILY_COINS = 10                  # Coins given to each user per day
     STARTING_COINS = 5000             # Coins on account creation
