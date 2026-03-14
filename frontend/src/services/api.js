@@ -1,9 +1,19 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const TOKEN_KEY = "borsa_token";
+
+export const setToken  = (t) => localStorage.setItem(TOKEN_KEY, t);
+export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+export const getToken  = () => localStorage.getItem(TOKEN_KEY);
 
 async function request(path, options = {}) {
+  const token = getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
     ...options,
   });
   const data = await res.json();
@@ -21,23 +31,23 @@ export const authAPI = {
 
 // ── Market ───────────────────────────────────────────────────────────────────
 export const marketAPI = {
-  listAssets:    ()       => request("/market/assets"),
-  getAsset:      (symbol) => request(`/market/assets/${symbol}`),
-  assetHistory:  (symbol, limit = 30) => request(`/market/assets/${symbol}/history?limit=${limit}`),
-  recentEvents:  (limit = 10) => request(`/market/events?limit=${limit}`),
+  listAssets:   ()                    => request("/market/assets"),
+  getAsset:     (symbol)              => request(`/market/assets/${symbol}`),
+  assetHistory: (symbol, limit = 30)  => request(`/market/assets/${symbol}/history?limit=${limit}`),
+  recentEvents: (limit = 10)          => request(`/market/events?limit=${limit}`),
 };
 
 // ── Portfolio ─────────────────────────────────────────────────────────────────
 export const portfolioAPI = {
-  getPortfolio:     ()     => request("/portfolio/"),
-  buy:              (body) => request("/portfolio/buy",  { method: "POST", body: JSON.stringify(body) }),
-  sell:             (body) => request("/portfolio/sell", { method: "POST", body: JSON.stringify(body) }),
-  getTransactions:  (limit = 50) => request(`/portfolio/transactions?limit=${limit}`),
+  getPortfolio:    ()           => request("/portfolio/"),
+  buy:             (body)       => request("/portfolio/buy",  { method: "POST", body: JSON.stringify(body) }),
+  sell:            (body)       => request("/portfolio/sell", { method: "POST", body: JSON.stringify(body) }),
+  getTransactions: (limit = 50) => request(`/portfolio/transactions?limit=${limit}`),
 };
 
 // ── Game ─────────────────────────────────────────────────────────────────────
 export const gameAPI = {
-  claimDaily:          () => request("/game/claim-daily",          { method: "POST" }),
-  sessionBonusStatus:  () => request("/game/session-bonus/status"),
-  sessionBonus:        () => request("/game/session-bonus",        { method: "POST" }),
+  claimDaily:         () => request("/game/claim-daily",         { method: "POST" }),
+  sessionBonusStatus: () => request("/game/session-bonus/status"),
+  sessionBonus:       () => request("/game/session-bonus",       { method: "POST" }),
 };

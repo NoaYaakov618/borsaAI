@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { authAPI, portfolioAPI, marketAPI, gameAPI } from "../services/api";
+import { authAPI, portfolioAPI, marketAPI, gameAPI, setToken, clearToken, getToken } from "../services/api";
 
 const GameContext = createContext(null);
 
@@ -18,9 +18,10 @@ export function GameProvider({ children }) {
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!getToken()) { setLoading(false); return; }
     authAPI.me()
       .then((d) => setUser(d.user))
-      .catch(() => {})
+      .catch(() => clearToken())
       .finally(() => setLoading(false));
   }, []);
 
@@ -84,17 +85,20 @@ export function GameProvider({ children }) {
   // ── Auth actions ──────────────────────────────────────────────────────────
   const login = async (credentials) => {
     const data = await authAPI.login(credentials);
+    setToken(data.token);
     setUser(data.user);
     return data;
   };
 
   const register = async (credentials) => {
     const data = await authAPI.register(credentials);
+    setToken(data.token);
     setUser(data.user);
     return data;
   };
 
   const logout = async () => {
+    clearToken();
     await authAPI.logout();
     setUser(null);
     setPortfolio(null);

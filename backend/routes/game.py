@@ -1,31 +1,23 @@
-from flask import Blueprint, jsonify, session
+from flask import Blueprint, jsonify, current_app
 from models import db
-from models.user import User
-from flask import current_app
+from routes.auth_utils import get_current_user
 
 game_bp = Blueprint("game", __name__, url_prefix="/api/game")
 
 
 @game_bp.get("/session-bonus/status")
 def session_bonus_status():
-    user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"error": "Not authenticated"}), 401
-    user = db.session.get(User, user_id)
+    user = get_current_user()
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Not authenticated"}), 401
     return jsonify(user.session_bonus_status())
 
 
 @game_bp.post("/session-bonus")
 def session_bonus():
-    user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"error": "Not authenticated"}), 401
-
-    user = db.session.get(User, user_id)
+    user = get_current_user()
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Not authenticated"}), 401
 
     result = user.claim_session_bonus()
     if result is None:
@@ -45,13 +37,9 @@ def session_bonus():
 
 @game_bp.post("/claim-daily")
 def claim_daily():
-    user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"error": "Not authenticated"}), 401
-
-    user = db.session.get(User, user_id)
+    user = get_current_user()
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Not authenticated"}), 401
 
     daily_coins = current_app.config["DAILY_COINS"]
     awarded = user.claim_daily_reward(daily_coins)

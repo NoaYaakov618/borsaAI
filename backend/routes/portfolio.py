@@ -1,23 +1,16 @@
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 from models import db
-from models.user import User
 from models.asset import Asset
 from models.portfolio import Holding
 from models.transaction import Transaction, TransactionType
+from routes.auth_utils import get_current_user
 
 portfolio_bp = Blueprint("portfolio", __name__, url_prefix="/api/portfolio")
 
 
-def _get_current_user():
-    user_id = session.get("user_id")
-    if not user_id:
-        return None
-    return db.session.get(User, user_id)
-
-
 @portfolio_bp.get("/")
 def get_portfolio():
-    user = _get_current_user()
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Not authenticated"}), 401
 
@@ -34,7 +27,7 @@ def get_portfolio():
 
 @portfolio_bp.post("/buy")
 def buy_asset():
-    user = _get_current_user()
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Not authenticated"}), 401
 
@@ -52,13 +45,10 @@ def buy_asset():
     if user.coins < total_cost:
         return jsonify({"error": "Insufficient coins", "required": total_cost, "available": user.coins}), 400
 
-    # Deduct coins
     user.coins -= total_cost
 
-    # Update or create holding
     holding = Holding.query.filter_by(user_id=user.id, asset_id=asset.id).first()
     if holding:
-        # Recalculate weighted average buy price
         total_qty = holding.quantity + quantity
         holding.avg_buy_price = (
             (holding.quantity * holding.avg_buy_price + quantity * asset.current_price) / total_qty
@@ -73,7 +63,6 @@ def buy_asset():
         )
         db.session.add(holding)
 
-    # Record transaction
     tx = Transaction(
         user_id=user.id,
         asset_id=asset.id,
@@ -94,7 +83,7 @@ def buy_asset():
 
 @portfolio_bp.post("/sell")
 def sell_asset():
-    user = _get_current_user()
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Not authenticated"}), 401
 
@@ -136,7 +125,7 @@ def sell_asset():
 
 @portfolio_bp.get("/transactions")
 def transaction_history():
-    user = _get_current_user()
+    user = get_current_user()
     if not user:
         return jsonify({"error": "Not authenticated"}), 401
 

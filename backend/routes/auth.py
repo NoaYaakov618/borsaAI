@@ -1,8 +1,19 @@
-from flask import Blueprint, request, jsonify, session, current_app
+import jwt
+from datetime import datetime, timedelta, timezone
+from flask import Blueprint, request, jsonify, current_app
 from models import db
 from models.user import User
+from routes.auth_utils import get_current_user
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
+
+
+def _make_token(user_id: int) -> str:
+    payload = {
+        "user_id": user_id,
+        "exp": datetime.now(timezone.utc) + timedelta(days=30),
+    }
+    return jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
 
 
 @auth_bp.post("/register")
@@ -24,8 +35,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    session["user_id"] = user.id
-    return jsonify({"message": "Account created", "user": user.to_dict()}), 201
+    return jsonify({"message": "Account created", "user": user.to_dict(), "token": _make_token(user.id)}), 201
 
 
 @auth_bp.post("/login")
@@ -41,22 +51,17 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    session["user_id"] = user.id
-    return jsonify({"user": user.to_dict()})
+    return jsonify({"user": user.to_dict(), "token": _make_token(user.id)})
 
 
 @auth_bp.post("/logout")
 def logout():
-    session.pop("user_id", None)
     return jsonify({"message": "Logged out"})
 
 
 @auth_bp.get("/me")
 def me():
-    user_id = session.get("user_id")
-    if not user_id:
-        return jsonify({"error": "Not authenticated"}), 401
-    user = db.session.get(User, user_id)
+    user = get_current_user()
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "Not authenticated"}), 401
     return jsonify({"user": user.to_dict()})
